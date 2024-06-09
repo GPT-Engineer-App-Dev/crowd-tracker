@@ -20,6 +20,7 @@ const Index = () => {
       peer.on("connect", () => {
         console.log("CONNECTED");
         setPeers((prevPeers) => [...prevPeers, peer]);
+        updateUserCount(peers.length + 1); // Update user count on connect
       });
 
       peer.on("data", (data) => {
@@ -32,6 +33,11 @@ const Index = () => {
 
       peer.on("error", (err) => {
         console.error("Peer error:", err);
+      });
+
+      peer.on("close", () => {
+        setPeers((prevPeers) => prevPeers.filter(p => p !== peer));
+        updateUserCount(peers.length); // Update user count on disconnect
       });
 
       // Simulate receiving a signal from another peer
@@ -60,6 +66,13 @@ const Index = () => {
       peer.send(JSON.stringify({ type: "user-count", count: userCount }));
     });
   }, [userCount, peers]);
+
+  const updateUserCount = (count) => {
+    setUserCount(count);
+    peers.forEach((peer) => {
+      peer.send(JSON.stringify({ type: "user-count", count }));
+    });
+  };
 
   return (
     <Container
